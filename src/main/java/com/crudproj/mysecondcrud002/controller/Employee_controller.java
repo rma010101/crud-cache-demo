@@ -3,6 +3,8 @@ package com.crudproj.mysecondcrud002.controller;
 import com.crudproj.mysecondcrud002.model.Employee;
 import com.crudproj.mysecondcrud002.repository.Employee_repo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,21 +18,25 @@ public class Employee_controller {
     private Employee_repo employeeRepo;
 
     @GetMapping
+    @Cacheable("employees")
     public List<Employee> getAllEmployees() {
         return employeeRepo.findAll();
     }
 
     @GetMapping("/{id}")
+    @Cacheable(value = "employee", key = "#id")
     public Optional<Employee> getEmployeeById(@PathVariable Long id) {
         return employeeRepo.findById(id);
     }
 
     @PostMapping
+    @CacheEvict(value = "employees", allEntries = true)
     public Employee createEmployee(@RequestBody Employee employee) {
         return employeeRepo.save(employee);
     }
 
     @PutMapping("/{id}")
+    @CacheEvict(value = {"employee", "employees"}, allEntries = true)
     public Employee updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
         Employee employee = employeeRepo.findById(id).orElseThrow();
         employee.setFirstName(employeeDetails.getFirstName());
@@ -40,6 +46,7 @@ public class Employee_controller {
     }
 
     @DeleteMapping("/{id}")
+    @CacheEvict(value = {"employee", "employees"}, allEntries = true)
     public void deleteEmployee(@PathVariable Long id) {
         employeeRepo.deleteById(id);
     }
